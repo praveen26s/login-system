@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <h2>Verify OTP</h2>
+
+    <form method="POST">
+        <input name="otp" placeholder="Enter OTP" required>
+        <button type="submit">Verify</button>
+    </form>
+</div>
+
+{% endblock %}

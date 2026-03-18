@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash">
+                {% for msg in messages %}
+                    <p>{{ msg }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>
