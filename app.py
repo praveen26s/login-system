@@ -1,23 +1,21 @@
 from flask import Flask, render_template, request, redirect, session, flash
 import sqlite3
 import random
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
-
-# MAIL IMPORT (SAFE)
-try:
-    from flask_mail import Mail, Message
-    import config
-    MAIL_ENABLED = True
-except:
-    MAIL_ENABLED = False
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# MAIL SETUP
-if MAIL_ENABLED:
-    app.config.from_object(config)
-    mail = Mail(app)
+# ---------------- MAIL CONFIG (FROM RENDER ENV) ----------------
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+
+mail = Mail(app)
 
 # ---------------- DATABASE ----------------
 def init_db():
@@ -48,19 +46,16 @@ def signup():
         otp = str(random.randint(100000, 999999))
         session['otp'] = otp
 
-        if MAIL_ENABLED:
-            try:
-                msg = Message(
-                    'OTP Verification',
-                    sender=app.config.get('MAIL_USERNAME'),
-                    recipients=[request.form['email']]
-                )
-                msg.body = f"Your OTP is {otp}"
-                mail.send(msg)
-            except Exception as e:
-                print("Mail Error:", e)
-                print("OTP:", otp)
-        else:
+        try:
+            msg = Message(
+                'OTP Verification',
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[request.form['email']]
+            )
+            msg.body = f"Your OTP is {otp}"
+            mail.send(msg)
+        except Exception as e:
+            print("Mail Error:", e)
             print("OTP:", otp)
 
         return redirect('/verify')
@@ -154,19 +149,16 @@ def forgot():
             session['reset_otp'] = otp
             session['reset_email'] = email
 
-            if MAIL_ENABLED:
-                try:
-                    msg = Message(
-                        'Password Reset OTP',
-                        sender=app.config.get('MAIL_USERNAME'),
-                        recipients=[email]
-                    )
-                    msg.body = f"Your OTP is {otp}"
-                    mail.send(msg)
-                except Exception as e:
-                    print("Mail Error:", e)
-                    print("OTP:", otp)
-            else:
+            try:
+                msg = Message(
+                    'Password Reset OTP',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[email]
+                )
+                msg.body = f"Your OTP is {otp}"
+                mail.send(msg)
+            except Exception as e:
+                print("Mail Error:", e)
                 print("RESET OTP:", otp)
 
             return redirect('/reset_verify')
@@ -206,6 +198,7 @@ def new_password():
 
     return render_template('new_password.html')
 
-# ---------------- RUN ----------------
+# ---------------- RUN (RENDER FIX) ----------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
